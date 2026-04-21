@@ -135,27 +135,52 @@
       </div>
       <div class="grid2">
         <div class="fg">
-          <label for="uGoal">Career goal *</label>
+          <label for="uGoal">Career / role goal *</label>
           <select id="uGoal">
-            <option value="Full-stack developer">Full-stack developer</option>
-            <option value="Backend / API specialist">Backend / API specialist</option>
-            <option value="Frontend / UI engineer">Frontend / UI engineer</option>
-            <option value="DevOps / Cloud engineer">DevOps / Cloud engineer</option>
-            <option value="ML / AI engineer">ML / AI engineer</option>
-            <option value="Mobile developer">Mobile developer</option>
-            <option value="Software architect">Software architect</option>
-            <option value="Data engineer">Data engineer</option>
-            <option value="QA automation engineer">QA automation engineer</option>
+            <optgroup label="Technology">
+              <option value="Full-stack developer">Full-stack developer</option>
+              <option value="Backend / API specialist">Backend / API specialist</option>
+              <option value="Frontend / UI engineer">Frontend / UI engineer</option>
+              <option value="DevOps / Cloud engineer">DevOps / Cloud engineer</option>
+              <option value="ML / AI engineer">ML / AI engineer</option>
+              <option value="Mobile developer">Mobile developer</option>
+              <option value="Software architect">Software architect</option>
+              <option value="Data engineer">Data engineer</option>
+              <option value="QA automation engineer">QA automation engineer</option>
+              <option value="IT support specialist">IT support specialist</option>
+              <option value="IT administrator">IT administrator</option>
+            </optgroup>
+            <optgroup label="Business functions">
+              <option value="HR professional">HR professional</option>
+              <option value="Sales professional">Sales professional</option>
+              <option value="Pre-sales / solution consultant">Pre-sales / solution consultant</option>
+              <option value="Finance professional">Finance professional</option>
+              <option value="Marketing professional">Marketing professional</option>
+              <option value="Admin / operations">Admin / operations</option>
+            </optgroup>
           </select>
         </div>
         <div class="fg">
-          <label for="uHours">Hours per week *</label>
-          <select id="uHours">
-            <option value="5">~5 hrs/week (light)</option>
-            <option value="10" selected>~10 hrs/week (moderate)</option>
-            <option value="20">~20 hrs/week (intensive)</option>
-            <option value="30">30+ hrs/week (full focus)</option>
+          <label for="uDuration">Plan duration *</label>
+          <select id="uDuration">
+            <option value="30">30-day plan (sprint)</option>
+            <option value="60">60-day plan (focused)</option>
+            <option value="90" selected>90-day plan (full)</option>
           </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fg">
+          <label for="uHours">Hours per week *</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="uHours" type="number" min="1" max="80" value="10" placeholder="e.g. 10" style="width:90px;flex-shrink:0;"/>
+            <span style="font-size:13px;color:var(--text2);">hrs / week</span>
+          </div>
+          <span style="font-size:11px;color:var(--text3);margin-top:2px;">Enter any number between 1 and 80</span>
+        </div>
+        <div class="fg">
+          <label for="uDept">Department (optional)</label>
+          <input id="uDept" type="text" placeholder="e.g. Engineering, Sales, HR..."/>
         </div>
       </div>
     </div>
@@ -203,7 +228,7 @@
         <button id="subBtn" class="btn btn-success" style="width:auto;" onclick="submitPlan()" disabled>Submit to team tracker &rarr;</button>
       </div>
     </div>
-    <div class="slbl">90-day phase plan</div>
+    <div class="slbl" id="phaseLbl">Phase plan</div>
     <div id="phases" class="pgrid"></div>
     <div id="outcomeCard" class="ocard"></div>
     <div id="succBanner" style="display:none;" class="succ"></div>
@@ -242,10 +267,22 @@ function goStep2() {
     return;
   }
 
+  const hours = parseInt(document.getElementById('uHours').value);
+  if (!hours || hours < 1 || hours > 80) {
+    errs.push('Please enter hours per week between 1 and 80');
+    document.getElementById('uHours').classList.add('err');
+  }
+  if (errs.length > 0) {
+    errBox.innerHTML = errs.map(e => '&bull; ' + e).join('<br>');
+    errBox.style.display = 'block';
+    return;
+  }
   uData = {
     name, email,
-    goal:  document.getElementById('uGoal').value,
-    hours: document.getElementById('uHours').value,
+    goal:     document.getElementById('uGoal').value,
+    hours:    hours,
+    duration: document.getElementById('uDuration').value,
+    dept:     document.getElementById('uDept').value.trim(),
     stack
   };
 
@@ -254,22 +291,36 @@ function goStep2() {
 }
 
 function buildPrompt() {
+  const dur = parseInt(uData.duration);
+  const phases = dur === 30
+    ? [{phase:"Week 1-2",focus:"...",milestone:"..."},{phase:"Week 3-4",focus:"...",milestone:"..."}]
+    : dur === 60
+    ? [{phase:"Month 1 (Days 1-30)",focus:"...",milestone:"..."},{phase:"Month 2 (Days 31-60)",focus:"...",milestone:"..."}]
+    : [{phase:"Month 1 (Days 1-30)",focus:"...",milestone:"..."},{phase:"Month 2 (Days 31-60)",focus:"...",milestone:"..."},{phase:"Month 3 (Days 61-90)",focus:"...",milestone:"..."}];
+  const phaseStr = JSON.stringify(phases);
+  const outcomeKey = dur === 30 ? "outcomeAt30Days" : dur === 60 ? "outcomeAt60Days" : "outcomeAt90Days";
+  const deptLine = uData.dept ? "Department: " + uData.dept + "
+" : "";
+  const courseCount = dur === 30 ? 2 : dur === 60 ? 3 : 5;
+
   document.getElementById('promptBox').textContent =
 `IMPORTANT: Your entire response must be a single raw JSON object. Do not write any text before or after it. Do not use markdown. Do not use backticks. Do not explain anything. Start your response with { and end with } and nothing else.
 
-Generate a 90-day tech learning plan for:
+Generate a ${dur}-day learning plan for:
 Name: ${uData.name}
-Stack: ${uData.stack}
-Goal: ${uData.goal}
-Hours/week: ${uData.hours}
+${deptLine}Role / Goal: ${uData.goal}
+Current skills / background: ${uData.stack}
+Hours available per week: ${uData.hours}
+Plan duration: ${dur} days
 
 Output this exact JSON structure filled with real content (no placeholder dots):
-{"summary":"2-3 sentence assessment","strengths":["strength 1","strength 2","strength 3"],"gaps":["gap 1","gap 2","gap 3"],"courses":[{"title":"course title","technology":"tech name and version","why":"why this course for this person","effort":"Low|Medium|High","effortDetail":"e.g. 2 hrs/week","duration":"e.g. 3 weeks","priority":"Must-learn|Recommended|Nice-to-have","resources":["resource 1","resource 2"]}],"weeklyPlan":[{"phase":"Month 1 (Days 1-30)","focus":"what to focus on","milestone":"what they can do by end"},{"phase":"Month 2 (Days 31-60)","focus":"what to focus on","milestone":"what they can do by end"},{"phase":"Month 3 (Days 61-90)","focus":"what to focus on","milestone":"what they can do by end"}],"totalEffort":"e.g. ~120 hours","outcomeAt90Days":"concrete description of where they will be"}
+{"summary":"2-3 sentence personalised assessment","strengths":["strength 1","strength 2","strength 3"],"gaps":["gap 1","gap 2","gap 3"],"courses":[{"title":"course or skill title","technology":"tool, platform or skill with version if relevant","why":"why this specifically for this person","effort":"Low|Medium|High","effortDetail":"e.g. 2 hrs/week","duration":"e.g. 2 weeks","priority":"Must-learn|Recommended|Nice-to-have","resources":["resource 1","resource 2"]}],"weeklyPlan":${phaseStr},"totalEffort":"e.g. ~60 hours","${outcomeKey}":"concrete description of where they will be in ${dur} days"}
 
 Rules:
-- Exactly 5 courses in the courses array
-- Use current 2025-2026 tech versions
-- Tailor everything specifically to the person's stack and goal
+- Exactly ${courseCount} courses in the courses array (fewer for shorter plans)
+- Use current 2025-2026 versions where technology is relevant
+- For non-technical roles (HR, Sales, Finance, Marketing, Admin) recommend tools and skills relevant to that role — e.g. Excel, CRM, data analysis, communication, AI tools for their function
+- Tailor everything specifically to the person's background and goal
 - Your response must begin with { and end with } with absolutely nothing else`;
 }
 
@@ -351,13 +402,18 @@ function renderPlan(p) {
       <p style="font-size:12px;color:var(--text2);margin:0;">Milestone: ${w.milestone}</p>
     </div>`).join('');
 
+  const outcomeVal = p.outcomeAt90Days || p.outcomeAt60Days || p.outcomeAt30Days || '';
+  const durLabel = p.outcomeAt30Days ? '30' : p.outcomeAt60Days ? '60' : '90';
   document.getElementById('outcomeCard').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
       <span style="font-size:11px;font-weight:600;color:var(--accent-text);text-transform:uppercase;letter-spacing:0.05em;">Total effort</span>
       <span style="font-size:15px;font-weight:600;color:var(--accent-text);">${p.totalEffort}</span>
     </div>
-    <p style="font-size:13px;color:var(--accent-text);margin:0;line-height:1.6;">In 90 days: ${p.outcomeAt90Days}</p>`;
+    <p style="font-size:13px;color:var(--accent-text);margin:0;line-height:1.6;">In ${durLabel} days: ${outcomeVal}</p>`;
 
+  const durVal = uData.duration || '90';
+  const lbl = document.getElementById('phaseLbl');
+  if(lbl) lbl.textContent = durVal + '-day phase plan';
   document.getElementById('succBanner').style.display = 'none';
   updateBar();
 }
@@ -414,14 +470,16 @@ function exportXL() {
   const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
   const chosen = Array.from(sel).sort().map(i => plan.courses[i]);
   const ws = XLSX.utils.aoa_to_sheet([
-    ['Name','Email','Goal','Date','#','Course Title','Technology','Priority','Effort','Effort Detail','Duration','Why Recommended','Resources','Status'],
-    ...chosen.map((c,i) => [uData.name,uData.email,uData.goal,today,i+1,c.title,c.technology,c.priority,c.effort,c.effortDetail,c.duration,c.why,c.resources.join(' | '),'Not started'])
+    ['Name','Email','Department','Goal','Plan Duration','Date','#','Course Title','Technology','Priority','Effort','Effort Detail','Duration','Why Recommended','Resources','Status'],
+    ...chosen.map((c,i) => [uData.name,uData.email,uData.dept||'',uData.goal,uData.duration+' days',today,i+1,c.title,c.technology,c.priority,c.effort,c.effortDetail,c.duration,c.why,c.resources.join(' | '),'Not started'])
   ]);
   ws['!cols']=[{wch:20},{wch:28},{wch:22},{wch:14},{wch:4},{wch:28},{wch:22},{wch:14},{wch:10},{wch:16},{wch:12},{wch:40},{wch:36},{wch:14}];
   const s2 = XLSX.utils.aoa_to_sheet([
-    ['Field','Detail'],['Name',uData.name],['Email',uData.email],['Goal',uData.goal],
-    ['Hours/week',uData.hours],['Date',today],['Total Effort',plan.totalEffort],
-    ['90-Day Outcome',plan.outcomeAt90Days],
+    ['Field','Detail'],['Name',uData.name],['Email',uData.email],
+    ['Department',uData.dept||''],['Goal',uData.goal],
+    ['Plan Duration',uData.duration+' days'],['Hours/week',uData.hours],
+    ['Date',today],['Total Effort',plan.totalEffort],
+    ['Outcome',(plan.outcomeAt90Days||plan.outcomeAt60Days||plan.outcomeAt30Days||'')],
     ...plan.weeklyPlan.map(w=>[w.phase,w.focus+' — '+w.milestone])
   ]);
   s2['!cols']=[{wch:20},{wch:60}];
