@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>90-Day Learning Planner</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.15);
+    --text: #1a1916; --text2: #6b6a65; --text3: #9e9d98;
+    --accent: #2563eb; --accent-bg: #eff5ff; --accent-text: #1d4ed8;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --radius: 10px; --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:2rem 1rem; font-size:15px; line-height:1.6; }
+  .wrap { max-width:720px; margin:0 auto; }
+  .header { text-align:center; margin-bottom:1.5rem; padding:2rem 1.5rem; background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); }
+  .tag { display:inline-block; font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent-text); background:var(--accent-bg); padding:4px 12px; border-radius:20px; margin-bottom:1rem; }
+  h1 { font-size:24px; font-weight:600; letter-spacing:-0.02em; margin-bottom:0.5rem; }
+  .sub { font-size:14px; color:var(--text2); }
+  .steps { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:1.25rem; }
+  .sdot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; background:var(--surface2); color:var(--text3); border:1px solid var(--border); transition:all 0.2s; }
+  .sdot.active { background:var(--text); color:#fff; border-color:var(--text); }
+  .sdot.done { background:var(--success); color:#fff; border-color:var(--success); }
+  .sline { width:32px; height:1px; background:var(--border2); }
+  .slabels { display:flex; justify-content:center; margin-top:6px; }
+  .slabel { font-size:11px; color:var(--text3); width:80px; text-align:center; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1rem; box-shadow:var(--shadow); }
+  .ctitle { font-size:11px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text3); margin-bottom:1rem; }
+  .fg { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  label { font-size:12px; font-weight:500; color:var(--text2); }
+  input, select, textarea { font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:9px 12px; width:100%; outline:none; transition:border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color:var(--accent); background:var(--surface); }
+  input.err, textarea.err { border-color:var(--danger); background:#fff8f8; }
+  textarea { resize:vertical; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; padding:11px 20px; border-radius:var(--radius); border:1px solid var(--border2); background:var(--surface); color:var(--text); cursor:pointer; transition:all 0.15s; width:100%; }
+  .btn:hover { background:var(--surface2); }
+  .btn:active { transform:scale(0.99); }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+  .btn-primary { background:var(--text); color:#fff; border-color:var(--text); }
+  .btn-primary:hover { background:#2d2c28; }
+  .btn-success { background:var(--success); color:#fff; border-color:var(--success); }
+  .btn-success:hover { background:#15803d; }
+  .btn-copy { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .btn-copy:hover { background:#1d4ed8; }
+  .err-box { background:var(--danger-bg); border:1px solid rgba(220,38,38,0.2); border-radius:var(--radius); padding:10px 14px; font-size:13px; color:var(--danger); margin-bottom:12px; display:none; }
+  .prompt-box { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:'DM Mono',monospace; font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:1rem; max-height:150px; overflow-y:auto; word-break:break-word; white-space:pre-wrap; }
+  .scrd { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:0.75rem; box-shadow:var(--shadow); }
+  .snum { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:600; margin-right:8px; flex-shrink:0; }
+  .srow { display:flex; align-items:flex-start; margin-bottom:6px; }
+  .stxt { flex:1; font-size:14px; font-weight:500; color:var(--text); padding-top:3px; }
+  .ssub { font-size:13px; color:var(--text2); margin-left:32px; margin-bottom:10px; }
+  .slbl { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text3); margin:1.5rem 0 0.75rem; }
+  .cc { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.25rem; margin-bottom:0.625rem; cursor:pointer; transition:border-color 0.15s, background 0.15s; display:flex; align-items:flex-start; gap:12px; box-shadow:var(--shadow); }
+  .cc:hover { border-color:var(--border2); }
+  .cc.sel { border:1.5px solid var(--accent); background:var(--accent-bg); }
+  .cbx { width:18px; height:18px; min-width:18px; border:1.5px solid var(--border2); border-radius:5px; margin-top:2px; display:flex; align-items:center; justify-content:center; background:var(--surface); transition:all 0.15s; }
+  .cc.sel .cbx { background:var(--accent); border-color:var(--accent); }
+  .chk { display:none; }
+  .cc.sel .chk { display:block; }
+  .cb { flex:1; min-width:0; }
+  .ctop { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:5px; }
+  .ctit { font-size:14px; font-weight:600; color:var(--text); }
+  .ctech { font-size:12px; color:var(--accent-text); margin-top:2px; }
+  .cwhy { font-size:13px; color:var(--text2); margin:4px 0 6px; }
+  .cmeta { display:flex; gap:14px; font-size:12px; color:var(--text2); margin-bottom:6px; }
+  .cmeta strong { color:var(--text); font-weight:500; }
+  .badge { font-size:11px; padding:2px 8px; border-radius:20px; font-weight:500; display:inline-block; margin:0 4px 4px 0; }
+  .bm { background:var(--danger-bg); color:var(--danger); }
+  .br { background:var(--accent-bg); color:var(--accent-text); }
+  .bn { background:var(--surface2); color:var(--text2); }
+  .bl { background:var(--success-bg); color:var(--success); }
+  .bmd { background:var(--accent-bg); color:var(--accent-text); }
+  .bh { background:var(--warning-bg); color:var(--warning); }
+  .rtag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface2); color:var(--text2); margin:2px 4px 2px 0; border:1px solid var(--border); }
+  .pgrid { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem; }
+  .pcard { flex:1; min-width:180px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:0.875rem 1rem; box-shadow:var(--shadow); }
+  .ppill { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:8px; }
+  .ocard { background:var(--accent-bg); border:1px solid rgba(37,99,235,0.15); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; }
+  .sumcard { background:var(--surface2); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem; }
+  .tcol { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .selbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.25rem; margin-bottom:1rem; box-shadow:var(--shadow); }
+  .scnt { font-size:13px; color:var(--accent-text); font-weight:500; }
+  .succ { background:var(--success-bg); border:1px solid rgba(22,163,74,0.2); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1rem; text-align:center; }
+  .si { width:44px; height:44px; border-radius:50%; background:var(--success); color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; font-size:20px; }
+  #step2,#step3 { display:none; }
+  @media(max-width:500px) { .grid2{grid-template-columns:1fr;} .tcol{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="tag">90-Day Learning Planner</div>
+    <h1>Team Learning Plan</h1>
+    <p class="sub">Generate your personalised learning plan with Claude and submit your selected courses to the team tracker.</p>
+    <div class="steps">
+      <div class="sdot active" id="d1">1</div><div class="sline"></div>
+      <div class="sdot" id="d2">2</div><div class="sline"></div>
+      <div class="sdot" id="d3">3</div>
+    </div>
+    <div class="slabels">
+      <div class="slabel">Your details</div>
+      <div class="slabel">Get AI plan</div>
+      <div class="slabel">Select &amp; submit</div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="ctitle">Step 1 — Your details</div>
+      <div id="errBox" class="err-box"></div>
+      <div class="grid2">
+        <div class="fg">
+          <label for="uName">Full name *</label>
+          <input id="uName" type="text" placeholder="e.g. Ravi Sharma"/>
+        </div>
+        <div class="fg">
+          <label for="uEmail">Work email *</label>
+          <input id="uEmail" type="email" placeholder="e.g. ravi@company.com"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label for="uStack">Current tech stack *</label>
+        <textarea id="uStack" rows="3" placeholder="e.g. Java 10 years, Spring Boot, AWS, Python basics, PostgreSQL..."></textarea>
+      </div>
+      <div class="grid2">
+        <div class="fg">
+          <label for="uGoal">Career / role goal *</label>
+          <select id="uGoal">
+            <optgroup label="Technology">
+              <option value="Full-stack developer">Full-stack developer</option>
+              <option value="Backend / API specialist">Backend / API specialist</option>
+              <option value="Frontend / UI engineer">Frontend / UI engineer</option>
+              <option value="DevOps / Cloud engineer">DevOps / Cloud engineer</option>
+              <option value="ML / AI engineer">ML / AI engineer</option>
+              <option value="Mobile developer">Mobile developer</option>
+              <option value="Software architect">Software architect</option>
+              <option value="Data engineer">Data engineer</option>
+              <option value="QA automation engineer">QA automation engineer</option>
+              <option value="IT support specialist">IT support specialist</option>
+              <option value="IT administrator">IT administrator</option>
+            </optgroup>
+            <optgroup label="Business functions">
+              <option value="HR professional">HR professional</option>
+              <option value="Sales professional">Sales professional</option>
+              <option value="Pre-sales / solution consultant">Pre-sales / solution consultant</option>
+              <option value="Finance professional">Finance professional</option>
+              <option value="Marketing professional">Marketing professional</option>
+              <option value="Admin / operations">Admin / operations</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="fg">
+          <label for="uDuration">Plan duration *</label>
+          <select id="uDuration">
+            <option value="30">30-day plan (sprint)</option>
+            <option value="60">60-day plan (focused)</option>
+            <option value="90" selected>90-day plan (full)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fg">
+          <label for="uHours">Hours per week *</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="uHours" type="number" min="1" max="80" value="10" placeholder="e.g. 10" style="width:90px;flex-shrink:0;"/>
+            <span style="font-size:13px;color:var(--text2);">hrs / week</span>
+          </div>
+          <span style="font-size:11px;color:var(--text3);margin-top:2px;">Enter any number between 1 and 80</span>
+        </div>
+        <div class="fg">
+          <label for="uDept">Department (optional)</label>
+          <input id="uDept" type="text" placeholder="e.g. Engineering, Sales, HR..."/>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="continueBtn" onclick="goStep2()">Continue to get AI plan &rarr;</button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2">
+    <div class="card">
+      <div class="ctitle">Step 2 — Get your plan from Claude</div>
+
+      <div class="scrd">
+        <div class="srow"><span class="snum">1</span><span class="stxt">Copy this personalised prompt</span></div>
+        <p class="ssub">Already filled with your details — just copy and paste into Claude.</p>
+        <div class="prompt-box" id="promptBox"></div>
+        <button class="btn btn-copy" id="copyBtn" onclick="copyPrompt()">Copy prompt to clipboard</button>
+      </div>
+
+      <div class="scrd" style="margin-top:0.75rem;">
+        <div class="srow"><span class="snum">2</span><span class="stxt">Open Claude.ai in a new tab</span></div>
+        <p class="ssub">Paste the prompt (Ctrl+V) and press Enter. Wait for Claude to reply with the JSON plan.</p>
+        <button class="btn" style="width:auto;" onclick="window.open('https://claude.ai','_blank')">Open Claude.ai &rarr;</button>
+      </div>
+
+      <div class="scrd" style="margin-top:0.75rem;">
+        <div class="srow"><span class="snum">3</span><span class="stxt">Paste Claude's JSON response below</span></div>
+        <p class="ssub">Copy Claude's entire reply (from { to }) and paste it here.</p>
+        <textarea id="jsonInput" rows="5" placeholder='Paste the JSON here...' style="font-family:DM Mono,monospace;font-size:12px;margin-bottom:8px;"></textarea>
+        <div id="jsonErr" style="display:none;font-size:12px;color:var(--danger);margin-bottom:8px;padding:8px 12px;background:var(--danger-bg);border-radius:var(--radius);"></div>
+        <button class="btn btn-primary" onclick="loadPlan()">Load my plan &rarr;</button>
+      </div>
+    </div>
+    <button class="btn" onclick="goBack1()" style="margin-top:0.5rem;">&larr; Back</button>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="step3">
+    <div id="sumCard" class="sumcard"></div>
+    <div class="slbl">Select the courses you commit to</div>
+    <div id="courseList"></div>
+    <div class="selbar">
+      <span id="selCnt" class="scnt">0 courses selected</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="dlBtn" class="btn" style="width:auto;" onclick="exportXL()" disabled>Download Excel</button>
+        <button id="subBtn" class="btn btn-success" style="width:auto;" onclick="submitPlan()" disabled>Submit to team tracker &rarr;</button>
+      </div>
+    </div>
+    <div class="slbl" id="phaseLbl">Phase plan</div>
+    <div id="phases" class="pgrid"></div>
+    <div id="outcomeCard" class="ocard"></div>
+    <div id="succBanner" style="display:none;" class="succ"></div>
+    <button class="btn" style="margin-top:0.5rem;" onclick="restart()">&larr; Start over</button>
+  </div>
+
+</div>
+
+<script>
+const FORM_URL = "https://forms.office.com/r/iY2dsKiq9H";
+let plan = null, sel = new Set(), uData = {};
+
+function goStep2() {
+  const errBox = document.getElementById('errBox');
+  const nm  = document.getElementById('uName');
+  const em  = document.getElementById('uEmail');
+  const stk = document.getElementById('uStack');
+
+  // Clear previous errors
+  errBox.style.display = 'none';
+  [nm, em, stk].forEach(el => el.classList.remove('err'));
+
+  const name  = nm.value.trim();
+  const email = em.value.trim();
+  const stack = stk.value.trim();
+
+  const errs = [];
+  if (!name)  { errs.push('Full name is required'); nm.classList.add('err'); }
+  if (!email) { errs.push('Work email is required'); em.classList.add('err'); }
+  else if (!email.includes('@')) { errs.push('Please enter a valid email address'); em.classList.add('err'); }
+  if (!stack) { errs.push('Please describe your current tech stack'); stk.classList.add('err'); }
+
+  if (errs.length > 0) {
+    errBox.innerHTML = errs.map(e => '&bull; ' + e).join('<br>');
+    errBox.style.display = 'block';
+    return;
+  }
+
+  if (errs.length > 0) {
+    errBox.innerHTML = errs.map(e => '&bull; ' + e).join('<br>');
+    errBox.style.display = 'block';
+    return;
+  }
+
+  const hoursRaw = document.getElementById('uHours').value.trim();
+  const hours = hoursRaw ? parseInt(hoursRaw) : 10;
+
+  uData = {
+    name, email,
+    goal:     document.getElementById('uGoal').value,
+    hours:    isNaN(hours) ? 10 : hours,
+    duration: document.getElementById('uDuration').value,
+    dept:     document.getElementById('uDept').value.trim(),
+    stack
+  };
+
+  buildPrompt();
+  showStep(2);
+}
+
+function buildPrompt() {
+  const dur = parseInt(uData.duration);
+  const phases = dur === 30
+    ? [{phase:"Week 1-2",focus:"...",milestone:"..."},{phase:"Week 3-4",focus:"...",milestone:"..."}]
+    : dur === 60
+    ? [{phase:"Month 1 (Days 1-30)",focus:"...",milestone:"..."},{phase:"Month 2 (Days 31-60)",focus:"...",milestone:"..."}]
+    : [{phase:"Month 1 (Days 1-30)",focus:"...",milestone:"..."},{phase:"Month 2 (Days 31-60)",focus:"...",milestone:"..."},{phase:"Month 3 (Days 61-90)",focus:"...",milestone:"..."}];
+  const phaseStr = JSON.stringify(phases);
+  const outcomeKey = dur === 30 ? "outcomeAt30Days" : dur === 60 ? "outcomeAt60Days" : "outcomeAt90Days";
+  const deptLine = uData.dept ? "Department: " + uData.dept + "
+" : "";
+  const courseCount = dur === 30 ? 2 : dur === 60 ? 3 : 5;
+
+  document.getElementById('promptBox').textContent =
+`IMPORTANT: Your entire response must be a single raw JSON object. Do not write any text before or after it. Do not use markdown. Do not use backticks. Do not explain anything. Start your response with { and end with } and nothing else.
+
+Generate a ${dur}-day learning plan for:
+Name: ${uData.name}
+${deptLine}Role / Goal: ${uData.goal}
+Current skills / background: ${uData.stack}
+Hours available per week: ${uData.hours}
+Plan duration: ${dur} days
+
+Output this exact JSON structure filled with real content (no placeholder dots):
+{"summary":"2-3 sentence personalised assessment","strengths":["strength 1","strength 2","strength 3"],"gaps":["gap 1","gap 2","gap 3"],"courses":[{"title":"course or skill title","technology":"tool, platform or skill with version if relevant","why":"why this specifically for this person","effort":"Low|Medium|High","effortDetail":"e.g. 2 hrs/week","duration":"e.g. 2 weeks","priority":"Must-learn|Recommended|Nice-to-have","resources":["resource 1","resource 2"]}],"weeklyPlan":${phaseStr},"totalEffort":"e.g. ~60 hours","${outcomeKey}":"concrete description of where they will be in ${dur} days"}
+
+Rules:
+- Exactly ${courseCount} courses in the courses array (fewer for shorter plans)
+- Use current 2025-2026 versions where technology is relevant
+- For non-technical roles (HR, Sales, Finance, Marketing, Admin) recommend tools and skills relevant to that role — e.g. Excel, CRM, data analysis, communication, AI tools for their function
+- Tailor everything specifically to the person's background and goal
+- Your response must begin with { and end with } with absolutely nothing else`;
+}
+
+async function copyPrompt() {
+  const text = document.getElementById('promptBox').textContent;
+  const btn = document.getElementById('copyBtn');
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied!';
+    btn.style.background = 'var(--success)';
+    setTimeout(() => { btn.textContent = 'Copy prompt to clipboard'; btn.style.background = ''; }, 2500);
+  } catch(e) {
+    btn.textContent = 'Select text above and press Ctrl+C';
+    setTimeout(() => { btn.textContent = 'Copy prompt to clipboard'; }, 3000);
+  }
+}
+
+function loadPlan() {
+  const raw = document.getElementById('jsonInput').value.trim();
+  const errEl = document.getElementById('jsonErr');
+  errEl.style.display = 'none';
+  if (!raw) { errEl.textContent = 'Please paste Claude\'s response first'; errEl.style.display = 'block'; return; }
+  try {
+    const cleaned = raw.replace(/```json|```/g,'').trim();
+    plan = JSON.parse(cleaned);
+    if (!plan.courses || !Array.isArray(plan.courses)) throw new Error('Missing courses');
+    if (!plan.weeklyPlan || !Array.isArray(plan.weeklyPlan)) throw new Error('Missing weeklyPlan');
+    sel.clear();
+    renderPlan(plan);
+    showStep(3);
+  } catch(e) {
+    errEl.textContent = 'Could not read the plan. Make sure you copied the full JSON from Claude — it should start with { and end with }. Error: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function pc(p) { return p==='Must-learn'?'bm':p==='Nice-to-have'?'bn':'br'; }
+function ec(e) { return e==='Low'?'bl':e==='High'?'bh':'bmd'; }
+
+function renderPlan(p) {
+  document.getElementById('sumCard').innerHTML = `
+    <p style="font-size:14px;line-height:1.65;margin:0 0 1rem;">${p.summary}</p>
+    <div class="tcol">
+      <div>
+        <p style="font-size:11px;font-weight:600;color:var(--success);margin:0 0 6px;text-transform:uppercase;letter-spacing:0.05em;">Strengths</p>
+        <ul style="margin:0;padding-left:16px;">${p.strengths.map(s=>`<li style="font-size:13px;color:var(--text2);margin-bottom:4px;">${s}</li>`).join('')}</ul>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:600;color:var(--warning);margin:0 0 6px;text-transform:uppercase;letter-spacing:0.05em;">Skill gaps</p>
+        <ul style="margin:0;padding-left:16px;">${p.gaps.map(g=>`<li style="font-size:13px;color:var(--text2);margin-bottom:4px;">${g}</li>`).join('')}</ul>
+      </div>
+    </div>`;
+
+  const cl = document.getElementById('courseList');
+  cl.innerHTML = '';
+  p.courses.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'cc';
+    d.onclick = () => toggleC(i);
+    d.innerHTML = `
+      <div class="cbx"><svg class="chk" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="cb">
+        <div class="ctop">
+          <div><div class="ctit">${i+1}. ${c.title}</div><div class="ctech">${c.technology}</div></div>
+          <div><span class="badge ${pc(c.priority)}">${c.priority}</span><span class="badge ${ec(c.effort)}">Effort: ${c.effort}</span></div>
+        </div>
+        <div class="cwhy">${c.why}</div>
+        <div class="cmeta"><span>Duration: <strong>${c.duration}</strong></span><span>${c.effortDetail}</span></div>
+        <div>${c.resources.map(r=>`<span class="rtag">${r}</span>`).join('')}</div>
+      </div>`;
+    cl.appendChild(d);
+  });
+
+  const ph = [['#eff5ff','#1d4ed8'],['#f0fdf4','#15803d'],['#fffbeb','#b45309']];
+  document.getElementById('phases').innerHTML = p.weeklyPlan.map((w,i)=>`
+    <div class="pcard">
+      <span class="ppill" style="background:${ph[i][0]};color:${ph[i][1]};">${w.phase}</span>
+      <p style="font-size:13px;font-weight:500;margin:0 0 5px;">${w.focus}</p>
+      <p style="font-size:12px;color:var(--text2);margin:0;">Milestone: ${w.milestone}</p>
+    </div>`).join('');
+
+  const outcomeVal = p.outcomeAt90Days || p.outcomeAt60Days || p.outcomeAt30Days || '';
+  const durLabel = p.outcomeAt30Days ? '30' : p.outcomeAt60Days ? '60' : '90';
+  document.getElementById('outcomeCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:11px;font-weight:600;color:var(--accent-text);text-transform:uppercase;letter-spacing:0.05em;">Total effort</span>
+      <span style="font-size:15px;font-weight:600;color:var(--accent-text);">${p.totalEffort}</span>
+    </div>
+    <p style="font-size:13px;color:var(--accent-text);margin:0;line-height:1.6;">In ${durLabel} days: ${outcomeVal}</p>`;
+
+  const durVal = uData.duration || '90';
+  const lbl = document.getElementById('phaseLbl');
+  if(lbl) lbl.textContent = durVal + '-day phase plan';
+  document.getElementById('succBanner').style.display = 'none';
+  updateBar();
+}
+
+function toggleC(i) {
+  sel.has(i) ? sel.delete(i) : sel.add(i);
+  document.querySelectorAll('.cc').forEach((el,idx) => { if(idx===i) el.classList.toggle('sel', sel.has(i)); });
+  updateBar();
+}
+
+function updateBar() {
+  const n = sel.size;
+  document.getElementById('selCnt').textContent = n + ' course' + (n!==1?'s':'') + ' selected';
+  document.getElementById('dlBtn').disabled = n === 0;
+  document.getElementById('subBtn').disabled = n === 0;
+}
+
+async function submitPlan() {
+  if (!plan || sel.size === 0) return;
+  const btn = document.getElementById('subBtn');
+  btn.disabled = true;
+  btn.textContent = 'Opening form...';
+
+  const chosen = Array.from(sel).sort().map(i => plan.courses[i]);
+  const clipText = [
+    `Name: ${uData.name}`,
+    `Email: ${uData.email}`,
+    `Goal: ${uData.goal}`,
+    `Hours/week: ${uData.hours}`,
+    ...chosen.map((c,i) => `Course ${i+1}: ${c.title} | ${c.priority} | ${c.duration}`),
+    `Total Effort: ${plan.totalEffort}`,
+    `90-Day Outcome: ${plan.outcomeAt90Days}`
+  ].join('\n');
+
+  try { await navigator.clipboard.writeText(clipText); } catch(e) {}
+
+  window.open(FORM_URL, '_blank');
+  btn.disabled = false;
+  btn.textContent = 'Submit to team tracker \u2192';
+
+  const b = document.getElementById('succBanner');
+  b.innerHTML = `
+    <div class="si">&#10003;</div>
+    <p style="font-size:16px;font-weight:600;color:var(--success);margin-bottom:8px;">Almost done!</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">The Microsoft Form has opened in a new tab.<br>Your data has been copied to your clipboard (Ctrl+V to paste).<br><br>Fill in the form fields and click <strong>Submit</strong> to complete.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:1rem;">Power Automate will then write your plan to the team Excel tracker and notify your manager automatically.</p>
+    <button class="btn" style="width:auto;margin:0 auto;" onclick="restart()">Submit another plan</button>`;
+  b.style.display = 'block';
+  b.scrollIntoView({ behavior:'smooth' });
+}
+
+function exportXL() {
+  if (!plan || sel.size === 0) return;
+  const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const chosen = Array.from(sel).sort().map(i => plan.courses[i]);
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Name','Email','Department','Goal','Plan Duration','Date','#','Course Title','Technology','Priority','Effort','Effort Detail','Duration','Why Recommended','Resources','Status'],
+    ...chosen.map((c,i) => [uData.name,uData.email,uData.dept||'',uData.goal,uData.duration+' days',today,i+1,c.title,c.technology,c.priority,c.effort,c.effortDetail,c.duration,c.why,c.resources.join(' | '),'Not started'])
+  ]);
+  ws['!cols']=[{wch:20},{wch:28},{wch:22},{wch:14},{wch:4},{wch:28},{wch:22},{wch:14},{wch:10},{wch:16},{wch:12},{wch:40},{wch:36},{wch:14}];
+  const s2 = XLSX.utils.aoa_to_sheet([
+    ['Field','Detail'],['Name',uData.name],['Email',uData.email],
+    ['Department',uData.dept||''],['Goal',uData.goal],
+    ['Plan Duration',uData.duration+' days'],['Hours/week',uData.hours],
+    ['Date',today],['Total Effort',plan.totalEffort],
+    ['Outcome',(plan.outcomeAt90Days||plan.outcomeAt60Days||plan.outcomeAt30Days||'')],
+    ...plan.weeklyPlan.map(w=>[w.phase,w.focus+' — '+w.milestone])
+  ]);
+  s2['!cols']=[{wch:20},{wch:60}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Learning Plan');
+  XLSX.utils.book_append_sheet(wb,s2,'Summary');
+  XLSX.writeFile(wb,`learning-plan-${uData.name.replace(/\s+/g,'-').toLowerCase()}.xlsx`);
+}
+
+function showStep(n) {
+  document.getElementById('step1').style.display = n===1?'block':'none';
+  document.getElementById('step2').style.display = n===2?'block':'none';
+  document.getElementById('step3').style.display = n===3?'block':'none';
+  [1,2,3].forEach(i => {
+    const d = document.getElementById('d'+i);
+    d.className = 'sdot'+(i<n?' done':i===n?' active':'');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goBack1() { showStep(1); }
+
+function restart() {
+  plan=null; sel.clear(); uData={};
+  ['uName','uEmail','uStack','jsonInput'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('jsonErr').style.display='none';
+  showStep(1);
+}
+</script>
+</body>
+</html>
