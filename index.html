@@ -255,16 +255,22 @@ function goStep2() {
 
 function buildPrompt() {
   document.getElementById('promptBox').textContent =
-`Generate a 90-day tech learning plan for:
+`IMPORTANT: Your entire response must be a single raw JSON object. Do not write any text before or after it. Do not use markdown. Do not use backticks. Do not explain anything. Start your response with { and end with } and nothing else.
+
+Generate a 90-day tech learning plan for:
 Name: ${uData.name}
 Stack: ${uData.stack}
 Goal: ${uData.goal}
 Hours/week: ${uData.hours}
 
-Reply with ONLY a raw JSON object (no markdown, no backticks, no explanation) using this exact structure:
-{"summary":"...","strengths":["...","...","..."],"gaps":["...","...","..."],"courses":[{"title":"...","technology":"...","why":"...","effort":"Low|Medium|High","effortDetail":"...","duration":"...","priority":"Must-learn|Recommended|Nice-to-have","resources":["...","..."]}],"weeklyPlan":[{"phase":"Month 1 (Days 1-30)","focus":"...","milestone":"..."},{"phase":"Month 2 (Days 31-60)","focus":"...","milestone":"..."},{"phase":"Month 3 (Days 61-90)","focus":"...","milestone":"..."}],"totalEffort":"...","outcomeAt90Days":"..."}
+Output this exact JSON structure filled with real content (no placeholder dots):
+{"summary":"2-3 sentence assessment","strengths":["strength 1","strength 2","strength 3"],"gaps":["gap 1","gap 2","gap 3"],"courses":[{"title":"course title","technology":"tech name and version","why":"why this course for this person","effort":"Low|Medium|High","effortDetail":"e.g. 2 hrs/week","duration":"e.g. 3 weeks","priority":"Must-learn|Recommended|Nice-to-have","resources":["resource 1","resource 2"]}],"weeklyPlan":[{"phase":"Month 1 (Days 1-30)","focus":"what to focus on","milestone":"what they can do by end"},{"phase":"Month 2 (Days 31-60)","focus":"what to focus on","milestone":"what they can do by end"},{"phase":"Month 3 (Days 61-90)","focus":"what to focus on","milestone":"what they can do by end"}],"totalEffort":"e.g. ~120 hours","outcomeAt90Days":"concrete description of where they will be"}
 
-Exactly 5 courses. Use current 2025-2026 tech versions. Tailor to their specific stack and goal.`;
+Rules:
+- Exactly 5 courses in the courses array
+- Use current 2025-2026 tech versions
+- Tailor everything specifically to the person's stack and goal
+- Your response must begin with { and end with } with absolutely nothing else`;
 }
 
 async function copyPrompt() {
