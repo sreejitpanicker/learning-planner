@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Team Learning Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f5f4f0;--white:#fff;--surface:#f0efe9;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
+  --text:#1a1916;--text2:#6b6a65;--text3:#9e9d98;
+  --blue:#2563eb;--blue-bg:#eff5ff;--blue-text:#1d4ed8;
+  --green:#16a34a;--green-bg:#f0fdf4;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --amber:#d97706;--amber-bg:#fffbeb;
+  --r:10px;--rl:16px;
+}
+body{font-family:sans-serif;background:var(--bg);color:var(--text);padding:1.5rem 1rem;font-size:15px;line-height:1.6;}
+.wrap{max-width:700px;margin:0 auto;}
+.hdr{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;text-align:center;margin-bottom:1.5rem;}
+.htag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-text);background:var(--blue-bg);padding:4px 12px;border-radius:20px;margin-bottom:.75rem;}
+.htitle{font-size:22px;font-weight:600;margin-bottom:.4rem;}
+.hsub{font-size:13px;color:var(--text2);}
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:1rem;}
+.sdot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:var(--surface);color:var(--text3);border:1px solid var(--border);}
+.sdot.on{background:var(--text);color:#fff;border-color:var(--text);}
+.sdot.ok{background:var(--green);color:#fff;border-color:var(--green);}
+.sline{width:30px;height:1px;background:var(--border2);}
+.slabs{display:flex;justify-content:center;margin-top:6px;}
+.slab{font-size:11px;color:var(--text3);width:80px;text-align:center;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;margin-bottom:1rem;}
+.ctitle{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+label{font-size:12px;font-weight:500;color:var(--text2);}
+input,select,textarea{font-family:sans-serif;font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;width:100%;outline:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+textarea{resize:vertical;}
+.hint{font-size:11px;color:var(--text3);margin-top:3px;}
+.ebox{background:var(--red-bg);border:1px solid rgba(220,38,38,.2);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:12px;display:none;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:sans-serif;font-size:14px;font-weight:500;padding:10px 20px;border-radius:var(--r);border:1px solid var(--border2);background:var(--white);color:var(--text);cursor:pointer;width:100%;}
+.btn:hover{background:var(--surface);}
+.btn-dark{background:var(--text);color:#fff;border-color:var(--text);}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.pbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem;font-family:monospace;font-size:12px;color:var(--text2);line-height:1.6;max-height:140px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;margin-bottom:.75rem;}
+.scrd{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:.75rem;}
+.snum{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:600;margin-right:8px;flex-shrink:0;}
+.srow{display:flex;align-items:flex-start;margin-bottom:5px;}
+.stxt{flex:1;font-size:14px;font-weight:500;padding-top:3px;}
+.ssub{font-size:13px;color:var(--text2);margin-left:32px;margin-bottom:10px;}
+.jerr{display:none;font-size:12px;color:var(--red);padding:8px 12px;background:var(--red-bg);border-radius:var(--r);margin-bottom:8px;}
+.slbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin:1.5rem 0 .75rem;}
+.cc{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:.625rem;cursor:pointer;display:flex;align-items:flex-start;gap:12px;}
+.cc:hover{border-color:var(--border2);}
+.cc.on{border:1.5px solid var(--blue);background:var(--blue-bg);}
+.cbx{width:18px;height:18px;min-width:18px;border:1.5px solid var(--border2);border-radius:5px;margin-top:2px;display:flex;align-items:center;justify-content:center;background:var(--white);}
+.cc.on .cbx{background:var(--blue);border-color:var(--blue);}
+.chk{display:none;}
+.cc.on .chk{display:block;}
+.cbody{flex:1;min-width:0;}
+.ctop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.ctit{font-size:14px;font-weight:600;}
+.ctech{font-size:12px;color:var(--blue-text);margin-top:2px;}
+.cwhy{font-size:13px;color:var(--text2);margin:4px 0 5px;}
+.cmeta{display:flex;gap:14px;font-size:12px;color:var(--text2);margin-bottom:5px;}
+.cmeta b{color:var(--text);font-weight:500;}
+.bdg{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block;margin:0 3px 3px 0;}
+.bm{background:var(--red-bg);color:var(--red);}
+.br{background:var(--blue-bg);color:var(--blue-text);}
+.bn{background:var(--surface);color:var(--text2);}
+.bl{background:var(--green-bg);color:var(--green);}
+.bh{background:var(--amber-bg);color:var(--amber);}
+.bmd{background:var(--blue-bg);color:var(--blue-text);}
+.rtag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface);color:var(--text2);margin:2px 3px 2px 0;border:1px solid var(--border);}
+.selbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem;}
+.scnt{font-size:13px;color:var(--blue-text);font-weight:500;}
+.pgrid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;}
+.pcard{flex:1;min-width:160px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:.875rem 1rem;}
+.ppill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px;}
+.ocard{background:var(--blue-bg);border:1px solid rgba(37,99,235,.15);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;}
+.sumcard{background:var(--surface);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;}
+.tcol{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.succ{background:var(--green-bg);border:1px solid rgba(22,163,74,.2);border-radius:var(--rl);padding:1.5rem;text-align:center;margin-bottom:1rem;display:none;}
+.si{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-size:20px;}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#pg2,#pg3{display:none;}
+@media(max-width:500px){.row2{grid-template-columns:1fr;}.tcol{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="htag">Learning Planner</div>
+  <div class="htitle">Team Learning Plan</div>
+  <p class="hsub">Generate your personalised learning plan with Claude and submit directly to the team tracker.</p>
+  <div class="steps">
+    <div class="sdot on" id="d1">1</div><div class="sline"></div>
+    <div class="sdot" id="d2">2</div><div class="sline"></div>
+    <div class="sdot" id="d3">3</div>
+  </div>
+  <div class="slabs">
+    <div class="slab">Your details</div>
+    <div class="slab">Get AI plan</div>
+    <div class="slab">Select &amp; submit</div>
+  </div>
+</div>
+
+<div id="pg1">
+  <div class="card">
+    <div class="ctitle">Step 1 — Your details</div>
+    <div class="ebox" id="eb"></div>
+    <div class="row2">
+      <div class="fg"><label>Full name *</label><input id="f1" type="text" placeholder="e.g. Ravi Sharma"/></div>
+      <div class="fg"><label>Work email *</label><input id="f2" type="email" placeholder="e.g. ravi@company.com"/></div>
+    </div>
+    <div class="fg"><label>Current skills / background *</label><textarea id="f3" rows="3" placeholder="e.g. Java 10 years, Spring Boot, AWS, Python basics..."></textarea></div>
+    <div class="row2">
+      <div class="fg">
+        <label>Career / role goal *</label>
+        <select id="f4">
+          <optgroup label="Technology">
+            <option>Full-stack developer</option>
+            <option>Backend / API specialist</option>
+            <option>Frontend / UI engineer</option>
+            <option>DevOps / Cloud engineer</option>
+            <option>ML / AI engineer</option>
+            <option>Mobile developer</option>
+            <option>Software architect</option>
+            <option>Data engineer</option>
+            <option>QA automation engineer</option>
+            <option>IT support specialist</option>
+            <option>IT administrator</option>
+          </optgroup>
+          <optgroup label="Business functions">
+            <option>HR professional</option>
+            <option>Sales professional</option>
+            <option>Pre-sales / solution consultant</option>
+            <option>Finance professional</option>
+            <option>Marketing professional</option>
+            <option>Admin / operations</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Plan duration *</label>
+        <select id="f5">
+          <option value="30">30-day plan (sprint)</option>
+          <option value="60">60-day plan (focused)</option>
+          <option value="90" selected>90-day plan (full)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="fg">
+        <label>Hours per week *</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input id="f6" type="number" min="1" max="80" value="10" style="width:90px;"/>
+          <span style="font-size:13px;color:var(--text2);">hrs / week</span>
+        </div>
+        <span class="hint">Enter any number 1-80</span>
+      </div>
+      <div class="fg">
+        <label>Department (optional)</label>
+        <input id="f7" type="text" placeholder="e.g. Engineering, HR, Sales..."/>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-dark" id="btn1">Continue to get AI plan &rarr;</button>
+</div>
+
+<div id="pg2">
+  <div class="card">
+    <div class="ctitle">Step 2 — Get your plan from Claude</div>
+    <div class="scrd">
+      <div class="srow"><span class="snum">1</span><span class="stxt">Copy this personalised prompt</span></div>
+      <p class="ssub">Already filled with your details — copy and paste into Claude.</p>
+      <div class="pbox" id="pbox"></div>
+      <button class="btn btn-blue" id="cbtn">Copy prompt to clipboard</button>
+    </div>
+    <div class="scrd" style="margin-top:.75rem;">
+      <div class="srow"><span class="snum">2</span><span class="stxt">Open Claude.ai in a new tab</span></div>
+      <p class="ssub">Paste the prompt and press Enter. Wait for Claude to reply with the JSON.</p>
+      <button class="btn" id="claudebtn" style="width:auto;">Open Claude.ai &rarr;</button>
+    </div>
+    <div class="scrd" style="margin-top:.75rem;">
+      <div class="srow"><span class="snum">3</span><span class="stxt">Paste Claude's JSON response here</span></div>
+      <p class="ssub">Copy Claude's entire reply (from { to }) and paste below.</p>
+      <textarea id="jin" rows="5" placeholder="Paste JSON here..." style="font-family:monospace;font-size:12px;margin-bottom:8px;"></textarea>
+      <div class="jerr" id="jerr"></div>
+      <button class="btn btn-dark" id="loadbtn">Load my plan &rarr;</button>
+    </div>
+  </div>
+  <button class="btn" id="backbtn" style="margin-top:.5rem;">&larr; Back</button>
+</div>
+
+<div id="pg3">
+  <div id="scard" class="sumcard"></div>
+  <div class="slbl">Select the courses you commit to</div>
+  <div id="clist"></div>
+  <div class="selbar">
+    <span id="scnt" class="scnt">0 courses selected</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="dlbtn" class="btn" style="width:auto;" disabled>Download Excel</button>
+      <button id="subbtn" class="btn btn-green" style="width:auto;" disabled>Submit to team tracker &rarr;</button>
+    </div>
+  </div>
+  <div class="slbl" id="plbl">Phase plan</div>
+  <div id="pgrid" class="pgrid"></div>
+  <div id="ocard" class="ocard"></div>
+  <div id="sbanner" class="succ"></div>
+  <button class="btn" id="restartbtn" style="margin-top:.5rem;">&larr; Start over</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+var SP_SITE = "https://techment0.sharepoint.com/sites/Learning";
+var SP_LIST = "LearningPlanSubmissions";
+var plan = null;
+var picked = new Set();
+var U = {};
+
+function go(n) {
+  document.getElementById('pg1').style.display = n===1 ? 'block' : 'none';
+  document.getElementById('pg2').style.display = n===2 ? 'block' : 'none';
+  document.getElementById('pg3').style.display = n===3 ? 'block' : 'none';
+  for(var i=1;i<=3;i++){
+    var d = document.getElementById('d'+i);
+    if(i<n) d.className='sdot ok';
+    else if(i===n) d.className='sdot on';
+    else d.className='sdot';
+  }
+  window.scrollTo(0,0);
+}
+
+function next1() {
+  var eb = document.getElementById('eb');
+  var f1 = document.getElementById('f1').value.trim();
+  var f2 = document.getElementById('f2').value.trim();
+  var f3 = document.getElementById('f3').value.trim();
+  var errs = [];
+  if(!f1) errs.push('Full name is required');
+  if(!f2) errs.push('Work email is required');
+  else if(f2.indexOf('@')===-1) errs.push('Please enter a valid email');
+  if(!f3) errs.push('Please describe your background');
+  if(errs.length > 0){
+    eb.innerHTML = errs.map(function(e){ return '&bull; '+e; }).join('<br>');
+    eb.style.display = 'block';
+    return;
+  }
+  eb.style.display = 'none';
+  var hrs = parseInt(document.getElementById('f6').value);
+  U = {
+    name:  f1,
+    email: f2,
+    stack: f3,
+    goal:  document.getElementById('f4').value,
+    dur:   document.getElementById('f5').value,
+    hours: isNaN(hrs) ? 10 : hrs,
+    dept:  document.getElementById('f7').value.trim()
+  };
+  buildP();
+  go(2);
+}
+
+function buildP() {
+  var d = parseInt(U.dur);
+  var nc = d===30 ? 2 : d===60 ? 3 : 5;
+  var ph = d===30
+    ? '[{"phase":"Week 1-2","focus":"...","milestone":"..."},{"phase":"Week 3-4","focus":"...","milestone":"..."}]'
+    : d===60
+    ? '[{"phase":"Month 1 (Days 1-30)","focus":"...","milestone":"..."},{"phase":"Month 2 (Days 31-60)","focus":"...","milestone":"..."}]'
+    : '[{"phase":"Month 1 (Days 1-30)","focus":"...","milestone":"..."},{"phase":"Month 2 (Days 31-60)","focus":"...","milestone":"..."},{"phase":"Month 3 (Days 61-90)","focus":"...","milestone":"..."}]';
+  var ok = d===30 ? 'outcomeAt30Days' : d===60 ? 'outcomeAt60Days' : 'outcomeAt90Days';
+  var dept = U.dept ? 'Department: '+U.dept+'\n' : '';
+  document.getElementById('pbox').textContent =
+    'IMPORTANT: Reply with ONLY a raw JSON object. No text before or after. No markdown. No backticks. Start with { end with }.\n\n'+
+    'Generate a '+d+'-day learning plan for:\n'+
+    'Name: '+U.name+'\n'+dept+
+    'Goal: '+U.goal+'\n'+
+    'Background: '+U.stack+'\n'+
+    'Hours/week: '+U.hours+'\n\n'+
+    'Use this exact JSON structure:\n'+
+    '{"summary":"...","strengths":["...","...","..."],"gaps":["...","...","..."],'+
+    '"courses":[{"title":"...","technology":"...","why":"...","effort":"Low|Medium|High",'+
+    '"effortDetail":"...","duration":"...","priority":"Must-learn|Recommended|Nice-to-have",'+
+    '"resources":["...","..."]}],"weeklyPlan":'+ph+','+
+    '"totalEffort":"...","'+ok+'":"..."}\n\n'+
+    'Rules: Exactly '+nc+' courses. Current 2025-2026 versions. '+
+    'For non-tech roles (HR/Sales/Finance/Marketing/Admin) recommend tools relevant to that role. '+
+    'Begin with { end with } nothing else.';
+}
+
+function doCopy() {
+  var btn = document.getElementById('cbtn');
+  var text = document.getElementById('pbox').textContent;
+  function success(){ btn.textContent='Copied!'; btn.style.background='#16a34a'; setTimeout(function(){ btn.textContent='Copy prompt to clipboard'; btn.style.background=''; },2500); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(success).catch(function(){ fallback(text,btn); });
+  } else { fallback(text,btn); }
+}
+
+function fallback(text,btn){
+  var ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); btn.textContent='Copied!'; btn.style.background='#16a34a'; setTimeout(function(){ btn.textContent='Copy prompt to clipboard'; btn.style.background=''; },2500); }
+  catch(e){ btn.textContent='Select text above and copy manually (Ctrl+C)'; }
+  document.body.removeChild(ta);
+}
+
+function doLoad() {
+  var raw = document.getElementById('jin').value.trim();
+  var je = document.getElementById('jerr');
+  je.style.display = 'none';
+  if(!raw){ je.textContent='Please paste the JSON from Claude first'; je.style.display='block'; return; }
+  try{
+    plan = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if(!plan.courses||!Array.isArray(plan.courses)) throw new Error('courses missing');
+    if(!plan.weeklyPlan||!Array.isArray(plan.weeklyPlan)) throw new Error('weeklyPlan missing');
+    picked.clear();
+    renderPlan();
+    go(3);
+  } catch(e){
+    je.textContent='Could not read the plan. Copy the full JSON from Claude (starts { ends }). Error: '+e.message;
+    je.style.display='block';
+  }
+}
+
+function pc(p){ return p==='Must-learn'?'bm':p==='Nice-to-have'?'bn':'br'; }
+function ec(e){ return e==='Low'?'bl':e==='High'?'bh':'bmd'; }
+
+function renderPlan(){
+  var p=plan;
+  document.getElementById('scard').innerHTML=
+    '<p style="font-size:14px;line-height:1.65;margin:0 0 1rem;">'+p.summary+'</p>'+
+    '<div class="tcol">'+
+    '<div><p style="font-size:11px;font-weight:600;color:var(--green);margin:0 0 6px;text-transform:uppercase;">Strengths</p>'+
+    '<ul style="margin:0;padding-left:16px;">'+p.strengths.map(function(s){ return '<li style="font-size:13px;color:var(--text2);margin-bottom:4px;">'+s+'</li>'; }).join('')+'</ul></div>'+
+    '<div><p style="font-size:11px;font-weight:600;color:var(--amber);margin:0 0 6px;text-transform:uppercase;">Skill gaps</p>'+
+    '<ul style="margin:0;padding-left:16px;">'+p.gaps.map(function(g){ return '<li style="font-size:13px;color:var(--text2);margin-bottom:4px;">'+g+'</li>'; }).join('')+'</ul></div>'+
+    '</div>';
+  var cl=document.getElementById('clist'); cl.innerHTML='';
+  p.courses.forEach(function(c,i){
+    var d=document.createElement('div');
+    d.className='cc'; d.setAttribute('data-i',i);
+    d.innerHTML=
+      '<div class="cbx"><svg class="chk" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+      '<div class="cbody">'+
+        '<div class="ctop"><div><div class="ctit">'+(i+1)+'. '+c.title+'</div><div class="ctech">'+c.technology+'</div></div>'+
+        '<div><span class="bdg '+pc(c.priority)+'">'+c.priority+'</span><span class="bdg '+ec(c.effort)+'">Effort: '+c.effort+'</span></div></div>'+
+        '<div class="cwhy">'+c.why+'</div>'+
+        '<div class="cmeta"><span>Duration: <b>'+c.duration+'</b></span><span>'+c.effortDetail+'</span></div>'+
+        '<div>'+c.resources.map(function(r){ return '<span class="rtag">'+r+'</span>'; }).join('')+'</div>'+
+      '</div>';
+    d.addEventListener('click',function(){ toggle(parseInt(this.getAttribute('data-i'))); });
+    cl.appendChild(d);
+  });
+  var ph=[['#eff5ff','#1d4ed8'],['#f0fdf4','#15803d'],['#fffbeb','#b45309']];
+  document.getElementById('pgrid').innerHTML=p.weeklyPlan.map(function(w,i){
+    return '<div class="pcard"><span class="ppill" style="background:'+ph[i][0]+';color:'+ph[i][1]+';">'+w.phase+'</span>'+
+      '<p style="font-size:13px;font-weight:500;margin:0 0 5px;">'+w.focus+'</p>'+
+      '<p style="font-size:12px;color:var(--text2);margin:0;">Milestone: '+w.milestone+'</p></div>';
+  }).join('');
+  var ov=p.outcomeAt90Days||p.outcomeAt60Days||p.outcomeAt30Days||'';
+  var dl=p.outcomeAt30Days?'30':p.outcomeAt60Days?'60':'90';
+  document.getElementById('ocard').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">'+
+    '<span style="font-size:11px;font-weight:600;color:var(--blue-text);text-transform:uppercase;">Total effort</span>'+
+    '<span style="font-size:15px;font-weight:600;color:var(--blue-text);">'+p.totalEffort+'</span></div>'+
+    '<p style="font-size:13px;color:var(--blue-text);margin:0;line-height:1.6;">In '+dl+' days: '+ov+'</p>';
+  var lbl=document.getElementById('plbl');
+  if(lbl) lbl.textContent=U.dur+'-day phase plan';
+  document.getElementById('sbanner').style.display='none';
+  updateBar();
+}
+
+function toggle(i){
+  if(picked.has(i)) picked.delete(i); else picked.add(i);
+  document.querySelectorAll('.cc').forEach(function(el,idx){
+    if(idx===i) el.className='cc'+(picked.has(i)?' on':'');
+  });
+  updateBar();
+}
+
+function updateBar(){
+  var n=picked.size;
+  document.getElementById('scnt').textContent=n+' course'+(n!==1?'s':'')+' selected';
+  document.getElementById('dlbtn').disabled=n===0;
+  document.getElementById('subbtn').disabled=n===0;
+}
+
+function getToken() {
+  return new Promise(function(resolve, reject){
+    fetch(SP_SITE+'/_api/contextinfo', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json;odata=verbose', 'Content-Type': 'application/json;odata=verbose' },
+      credentials: 'include'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ resolve(d.d.GetContextWebInformation.FormDigestValue); })
+    .catch(function(e){ reject(e); });
+  });
+}
+
+function doSubmit(){
+  if(!plan||picked.size===0) return;
+  var btn=document.getElementById('subbtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Submitting...';
+
+  var chosen=Array.from(picked).sort().map(function(i){ return plan.courses[i]; });
+  var today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  var ov=plan.outcomeAt90Days||plan.outcomeAt60Days||plan.outcomeAt30Days||'';
+
+  var body = {
+    '__metadata': { 'type': 'SP.Data.LearningPlanSubmissionsListItem' },
+    'Title':          U.name,
+    'Email':          U.email,
+    'Department':     U.dept||'',
+    'Goal':           U.goal,
+    'PlanDuration':   U.dur+' days',
+    'HoursPerWeek':   String(U.hours),
+    'Course1Title':   chosen[0]?chosen[0].title:'',
+    'Course1Priority':chosen[0]?chosen[0].priority:'',
+    'Course1Duration':chosen[0]?chosen[0].duration:'',
+    'Course2Title':   chosen[1]?chosen[1].title:'',
+    'Course2Priority':chosen[1]?chosen[1].priority:'',
+    'Course2Duration':chosen[1]?chosen[1].duration:'',
+    'Course3Title':   chosen[2]?chosen[2].title:'',
+    'Course3Priority':chosen[2]?chosen[2].priority:'',
+    'Course3Duration':chosen[2]?chosen[2].duration:'',
+    'Course4Title':   chosen[3]?chosen[3].title:'',
+    'Course4Priority':chosen[3]?chosen[3].priority:'',
+    'Course4Duration':chosen[3]?chosen[3].duration:'',
+    'Course5Title':   chosen[4]?chosen[4].title:'',
+    'Course5Priority':chosen[4]?chosen[4].priority:'',
+    'Course5Duration':chosen[4]?chosen[4].duration:'',
+    'TotalEffort':    plan.totalEffort,
+    'SubmittedAt':    today,
+    'Outcome':        ov
+  };
+
+  getToken().then(function(token){
+    return fetch(SP_SITE+"/_api/web/lists/getbytitle('"+SP_LIST+"')/items", {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json;odata=verbose',
+        'Content-Type': 'application/json;odata=verbose',
+        'X-RequestDigest': token
+      },
+      body: JSON.stringify(body)
+    });
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(){
+    btn.disabled=false;
+    btn.textContent='Submit to team tracker \u2192';
+    showSuccess();
+  })
+  .catch(function(e){
+    btn.disabled=false;
+    btn.textContent='Submit to team tracker \u2192';
+    var b=document.getElementById('sbanner');
+    b.style.display='block';
+    b.innerHTML=
+      '<p style="font-size:15px;font-weight:600;color:var(--red);margin-bottom:8px;">Submission failed</p>'+
+      '<p style="font-size:13px;color:var(--text2);margin-bottom:8px;">Error: '+e.message+'</p>'+
+      '<p style="font-size:12px;color:var(--text3);">Make sure you are signed into your Microsoft 365 account in this browser. The widget needs your M365 login to write to SharePoint.</p>';
+    b.scrollIntoView({behavior:'smooth'});
+  });
+}
+
+function showSuccess(){
+  var b=document.getElementById('sbanner');
+  b.innerHTML=
+    '<div class="si">&#10003;</div>'+
+    '<p style="font-size:16px;font-weight:600;color:var(--green);margin-bottom:8px;">Plan submitted successfully!</p>'+
+    '<p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Your selected courses have been saved to the team tracker.<br>Your manager has been notified automatically.</p>'+
+    '<button class="btn" id="rb2" style="width:auto;margin:0 auto;">Submit another plan</button>';
+  b.style.display='block';
+  b.scrollIntoView({behavior:'smooth'});
+  document.getElementById('rb2').addEventListener('click', doRestart);
+}
+
+function doXL(){
+  if(!plan||picked.size===0) return;
+  var today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  var chosen=Array.from(picked).sort().map(function(i){ return plan.courses[i]; });
+  var ws=XLSX.utils.aoa_to_sheet([
+    ['Name','Email','Department','Goal','Plan Duration','Date','#','Course Title','Technology','Priority','Effort','Effort Detail','Duration','Why','Resources','Status']
+  ].concat(chosen.map(function(c,i){
+    return [U.name,U.email,U.dept||'',U.goal,U.dur+' days',today,i+1,c.title,c.technology,c.priority,c.effort,c.effortDetail,c.duration,c.why,c.resources.join(' | '),'Not started'];
+  })));
+  ws['!cols']=[{wch:20},{wch:28},{wch:16},{wch:22},{wch:12},{wch:14},{wch:4},{wch:28},{wch:22},{wch:14},{wch:10},{wch:16},{wch:12},{wch:36},{wch:36},{wch:14}];
+  var s2=XLSX.utils.aoa_to_sheet([
+    ['Field','Detail'],['Name',U.name],['Email',U.email],['Department',U.dept||''],
+    ['Goal',U.goal],['Plan Duration',U.dur+' days'],['Hours/week',U.hours],['Date',today],
+    ['Total Effort',plan.totalEffort],
+    ['Outcome',(plan.outcomeAt90Days||plan.outcomeAt60Days||plan.outcomeAt30Days||'')]
+  ].concat(plan.weeklyPlan.map(function(w){ return [w.phase,w.focus+' - '+w.milestone]; })));
+  s2['!cols']=[{wch:20},{wch:60}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Learning Plan');
+  XLSX.utils.book_append_sheet(wb,s2,'Summary');
+  XLSX.writeFile(wb,'learning-plan-'+U.name.replace(/\s+/g,'-').toLowerCase()+'.xlsx');
+}
+
+function doRestart(){
+  plan=null; picked.clear(); U={};
+  ['f1','f2','f3','f7','jin'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('f6').value='10';
+  document.getElementById('eb').style.display='none';
+  document.getElementById('jerr').style.display='none';
+  go(1);
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('btn1').addEventListener('click', next1);
+  document.getElementById('cbtn').addEventListener('click', doCopy);
+  document.getElementById('claudebtn').addEventListener('click', function(){ window.open('https://claude.ai','_blank'); });
+  document.getElementById('loadbtn').addEventListener('click', doLoad);
+  document.getElementById('backbtn').addEventListener('click', function(){ go(1); });
+  document.getElementById('dlbtn').addEventListener('click', doXL);
+  document.getElementById('subbtn').addEventListener('click', doSubmit);
+  document.getElementById('restartbtn').addEventListener('click', doRestart);
+});
+</script>
+</body>
+</html>
